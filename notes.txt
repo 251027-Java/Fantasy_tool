@@ -1,0 +1,70 @@
+// api link
+https://docs.sleeper.com/#introduction
+
+// data layout
+
+player
+    player_id
+    fantasy_positions  (issues with multiple?)
+    team
+    full_name
+    fantasy_data_id     (don't know what for)
+    stats_id            (don't know what for)
+    roto_world_id       (don't know what for)
+
+player_postitions
+    player_id
+    position
+
+user
+    username
+    user_id
+    display_name
+
+league
+    total_rosters (number)
+    season 
+    league_id
+    draft_id
+
+matchup
+    league_id
+    week
+    matchup_id (two matchup ids with same are the match for the week)
+
+starting
+    player_id
+    match_up_id
+    roster_id
+    points
+
+transaction
+    type    (trade, waiver, free agent)
+    transaction_id
+    roster_ids  (list of roster_ids involved)
+    
+transaction_roster
+    transaction_id
+    roster_id
+
+transaction_drops       
+    transaction_id
+    player_id
+
+transaction_add     
+    transaction_id
+    player_id
+
+
+draft_picks
+    player_id
+    roster_id
+    draft_id
+    round
+    draft_slot  (column in draft)
+
+draft
+    league_id
+    draft_id
+
+
