@@ -5,7 +5,6 @@ https://docs.sleeper.com/#introduction
 
 player
     player_id
-    fantasy_positions  (issues with multiple?)
     team
     full_name
     fantasy_data_id     (don't know what for)
@@ -32,11 +31,15 @@ matchup
     week
     matchup_id (two matchup ids with same are the match for the week)
 
-starting
+roster
     player_id
-    match_up_id
+    matchup_id 
     roster_id
+    user_id
+    league_id
     points
+    week
+    starting
 
 transaction
     type    (trade, waiver, free agent)
@@ -44,7 +47,7 @@ transaction
     roster_ids  (list of roster_ids involved)
     
 transaction_roster
-    transaction_id
+    transaction_id 
     roster_id
 
 transaction_drops       
@@ -56,14 +59,14 @@ transaction_add
     player_id
 
 
-draft_picks
+draft_pick
     player_id
     roster_id
     draft_id
     round
     draft_slot  (column in draft)
 
-draft
+draft_pick_to_league
     league_id
     draft_id
 

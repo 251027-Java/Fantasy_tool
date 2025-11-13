@@ -4,38 +4,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GlobalLogger {
-    private static GlobalLogger instance;
-    private Logger actualLogger; // e.g., an instance of java.util.logging.Logger or org.slf4j.Logger
+    private static Logger actualLogger; // e.g., an instance of java.util.logging.Logger or org.slf4j.Logger
 
-    private GlobalLogger() {
-        // Initialize your actual logging framework here
-        // e.g., actualLogger = Logger.getLogger(GlobalLogger.class.getName());
-        actualLogger = LoggerFactory.getLogger(GlobalLogger.class);
-
-    }
-
-    public static GlobalLogger getLog() {
-        if (instance == null) {
-            instance = new GlobalLogger();
-        }
-        return instance;
-    }
 
     // Methods to delegate to the actual logger
-    public void info(String message) {
+    public static void info(String message) {
+        if (actualLogger == null) {
+            actualLogger = LoggerFactory.getLogger(GlobalLogger.class);
+        }
         actualLogger.info(message);
     }
 
-    public void error(String message) {
+    public static void error(String message) {
+        if (actualLogger == null) {
+            actualLogger = LoggerFactory.getLogger(GlobalLogger.class);
+        }
         actualLogger.error(message); 
     }
 
-    public void error(String message, Throwable t) {
+    public static void error(String message, Throwable t) {
+        if (actualLogger == null) {
+            actualLogger = LoggerFactory.getLogger(GlobalLogger.class);
+        }
         actualLogger.error(message, t); 
     }
 
-    public void debug(String message) {
+    public static void debug(String message) {
+        if (actualLogger == null) {
+            actualLogger = LoggerFactory.getLogger(GlobalLogger.class);
+        }
         actualLogger.debug(message);
     }
-    // ... other logging methods
+
 }
