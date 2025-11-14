@@ -7,8 +7,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.net.ConnectException;
 
 import com.Logger.GlobalLogger;
+import com.fantasy.Exception.HttpConnectionException;
 
 public class SleeperRequestHandler {
 
@@ -17,15 +19,19 @@ public class SleeperRequestHandler {
     public static String getBaseUrl() {
         return baseUrl;
     }
+
     /**
-     * Get all the players from api. Read as a InputStream because it is a very large 
+     * Get all the players from api. Read as a InputStream because it is a very
+     * large
      * response (multiple megabytes).
+     * 
      * @return The response from sleeper api
-     * @throws ExceptionInInitializerError if an I/O error occurs when 
-     * sending or receiving or if the request is interrupted
+     * @throws ExceptionInInitializerError if an I/O error occurs when
+     *                                     sending or receiving or if the request is
+     *                                     interrupted
      */
     public static HttpResponse<InputStream> getPlayers()
-            throws ExceptionInInitializerError {
+            throws HttpConnectionException {
         HttpClient client = HttpClient.newHttpClient();
 
         // build request
@@ -40,20 +46,20 @@ public class SleeperRequestHandler {
             return response;
         } catch (Exception e) {
             GlobalLogger.error("Could not get players", e);
-            throw new ExceptionInInitializerError(e);
+            throw new HttpConnectionException("Error requesting players from sleeper api");
         }
     }
 
-   
     /**
      * Get sleeper user from username
+     * 
      * @param username
      * @return The response from sleeper api
-     * @throws IOException if an I/O error occurs when sending or receiving
+     * @throws IOException          if an I/O error occurs when sending or receiving
      * @throws InterruptedException if the request is interrupted
      */
     public static HttpResponse<String> getUserFromUsername(String username)
-            throws IOException, InterruptedException {
+            throws HttpConnectionException {
         HttpClient client = HttpClient.newHttpClient();
 
         // build an HttpRequest
@@ -67,26 +73,27 @@ public class SleeperRequestHandler {
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
             return response;
         } catch (Exception e) {
-            GlobalLogger.error("Could not get players", e);
-            throw new ExceptionInInitializerError(e);
+            GlobalLogger.error(String.format("Could not get user_id from username '%s'", username), e);
+            throw new HttpConnectionException("Error getting user from sleeper api");
         }
     }
 
-    /** Get all the leagues from a sleeper user in a given year from api
+    /**
+     * Get all the leagues from a sleeper user in a given year from api
      * 
      * @param user_id the user_id from sleeper
-     * @param season the year to get the leagues
+     * @param season  the year to get the leagues
      * @return The response from sleeper api
-     * @throws IOException  if an I/O error occurs when sending or receiving
+     * @throws IOException          if an I/O error occurs when sending or receiving
      * @throws InterruptedException if the request is interrupted
      */
-    public static HttpResponse<String> getLeaguesFromUserIDAndSeason(long user_id, int season)
-            throws IOException, InterruptedException {
+    public static HttpResponse<String> getLeaguesFromUserIDAndSeason(long user_id, int seasonYear)
+            throws HttpConnectionException {
         HttpClient client = HttpClient.newHttpClient();
 
         // build an HttpRequest
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/players/nfl"))
+                .uri(URI.create(baseUrl + "user/" + user_id + "/leagues/nfl/" + seasonYear))
                 .GET()
                 .build();
 
@@ -95,8 +102,13 @@ public class SleeperRequestHandler {
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
             return response;
         } catch (Exception e) {
-            GlobalLogger.error("Could not get players", e);
-            throw new ExceptionInInitializerError(e);
+            GlobalLogger.error(
+                    String.format(
+                            "Could not get user '%s' leagues from season '%s'",
+                            user_id,
+                            seasonYear),
+                    e);
+            throw new HttpConnectionException("");
         }
     }
 }

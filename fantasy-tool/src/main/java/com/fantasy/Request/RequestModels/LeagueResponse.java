@@ -50,5 +50,13 @@ public class LeagueResponse {
         this.draftId = draft_id;
     }
 
+    public String getName() {
+        throw new UnsupportedOperationException("Unimplemented method 'getName'");
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
 
 }
