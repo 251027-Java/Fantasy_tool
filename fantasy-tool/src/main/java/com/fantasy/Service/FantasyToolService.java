@@ -4,7 +4,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpResponse;
+import java.text.ParseException;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -54,15 +58,39 @@ public class FantasyToolService implements Closeable {
         
 
         // add users from chosen league into database (if not there already)
-        // List<UsernameResponse> users = this.getUsersFromLeague(chosenLeagueId);
+        List<UserResponse> users = this.getUsersFromLeague(chosenLeagueId);
+
+        // process users into db format
+        this.processUsers(users);
 
 
-        // get players from sleeper
+        // check if players have been updated recently
+        try {
+            Boolean updatedRecently = this.playersUpdatedRecently();
+            if (!updatedRecently) {
+                // get players from sleeper
+                List<PlayerResponse> players = this.getPlayers();
 
+                // process players into db format and insert
 
-        // add players into database (if not there already)
+                // update players last updated
+                this.updateLastPlayerUpdate();
+            }
+        } catch (DateTimeParseException e) {
+            GlobalLogger.error(String.format("Could not parse last player update, date: %s", e.getParsedString()), e);
+            // critical error
+            System.out.println("Critical error: could not retrieve players' information");
+            System.exit(1);
+
+        }
+
+        // get roster mapping to user from sleeper
+
+        // process roster mapping and insert to db
 
         // get rosters from sleeper
+
+        // process rosters and insert to db
 
         // compute stats from rosters information (lots of logic here)
 
@@ -80,7 +108,7 @@ public class FantasyToolService implements Closeable {
      * Process leagues into database format and insert. Also inputs draft skeleton
      * into database
      * @param leagues the response from sleeper
-     * @return
+     * @return list of league ids
      */
     private List<Long> processLeagueInfo(List<LeagueResponse> leagues) { 
         List<Long> leagueIds = new ArrayList<>();
@@ -109,7 +137,7 @@ public class FantasyToolService implements Closeable {
     
     /**
      * Get userId from sleeper based on input username from user
-     * @return userId
+     * @return userId of user
      */
     private long getUserId(){
         // prompt user for username until valid httpresponse is returned
@@ -127,7 +155,7 @@ public class FantasyToolService implements Closeable {
                     long userId = resp.getUser_id();
                     return userId;
                 }
-            } catch (HttpConnectionException e) {
+            } catch (Exception e) {
                 GlobalLogger.debug("Could not find user", e);
                 System.out.println("Invalid username");
             }
@@ -137,7 +165,7 @@ public class FantasyToolService implements Closeable {
     /**
      * Get leagues for the current year from sleeper based on userId
      * @param userId the user_id of leagues to look for
-     * @return
+     * @return list of leagues
      */
     private List<LeagueResponse> getLeaguesFromUserId(long userId) {
         // get the current year from time clock
@@ -149,13 +177,18 @@ public class FantasyToolService implements Closeable {
                 List<LeagueResponse> resp = om.readValue(response.body(), new TypeReference<List<LeagueResponse>>(){});
                 return resp;
             }
-        } catch (HttpConnectionException e) {
+        } catch (Exception e) {
             GlobalLogger.debug(String.format("Could not get leagues from user_id '%s'", userId), e);
-            System.out.println("No leagues found");
         }
+        System.out.println("No leagues found");
         return List.of();
     } 
 
+    /**
+     * Ask user to choose a league from options
+     * @param leagues list of leagues that are available
+     * @return the id of the chosen league
+     */
     public Long chooseLeague(List<League> leagues) {
         // prompt user to choose a league
 
@@ -177,17 +210,78 @@ public class FantasyToolService implements Closeable {
         // return the id of the chosen league
     }
 
-    // public List<UserResponse> getUsersFromLeague(long leagueId) {
-    //     try {
-    //         HttpResponse<String> response = SleeperRequestHandler.getUsersFromLeague(leagueId);
-    //         if (response.statusCode() == 200) {
-                
-    //         }
-    //     } catch (HttpConnectionException e) {
-    //         GlobalLogger.debug(String.format("Could not get users from league_id '%s'", leagueId), e);
-    //         System.out.println("No users found");
-    //     }
-    // }
+    private List<PlayerResponse> getPlayers() {
+        try {
+            HttpResponse<String> response = SleeperRequestHandler.getPlayers();
+            if (response.statusCode() == 200) {
+                // TODO: need to do slightly special parsing here since 
+                // it's {key : PlayerResponse, ... } format. 
+                List<PlayerResponse> resp = om.readValue(response.body(), new TypeReference<List<PlayerResponse>>(){});
+                return resp;
+            }
+        } catch (Exception e) {
+            GlobalLogger.debug("Could not get players", e);
+        }
+        System.out.println("No users found");
+        return List.of();
+    }
+
+    /**
+     * Get users from a sleeper league based on leagueId
+     * @param leagueId the id of the league
+     * @return a list of users
+     */
+    public List<UserResponse> getUsersFromLeague(long leagueId) {
+        try {
+            HttpResponse<String> response = SleeperRequestHandler.getUsersFromLeague(leagueId);
+            if (response.statusCode() == 200) {
+                List<UserResponse> resp = om.readValue(response.body(), new TypeReference<List<UserResponse>>(){});
+                return resp;
+            }
+        } catch (Exception e) {
+            GlobalLogger.debug(String.format("Could not get users from league_id '%s'", leagueId), e);
+        }
+        System.out.println("No users found");
+        return List.of();
+    }
+
+    public void processUsers(List<UserResponse> users) { 
+        for (UserResponse user : users) {
+            // check if user already in database
+            if (this.repo.getUserById(user.getUserId()) == null) {
+                User dbUser = new User(user.getUserId(), user.getDisplayName());
+                this.repo.save(dbUser);
+                GlobalLogger.debug("User added: " + dbUser.toString());
+            }
+        }
+    }
+
+    private boolean playersUpdatedRecently() throws DateTimeParseException {
+        String lastUpdateStr = this.repo.getSystemMetadata("last_player_update").getValue();
+
+        if (lastUpdateStr == null) { // hasn't been put in db yet
+            return false;
+        }
+
+        LocalDateTime lastUpdate = LocalDateTime.parse(lastUpdateStr);
+        LocalDateTime now = LocalDateTime.now();
+        // if less than 1 day has passed, return true
+        return lastUpdate.isAfter(now.minusDays(1));
+        
+       
+    }
+
+    private void updateLastPlayerUpdate() {
+        LocalDateTime now = LocalDateTime.now();
+        // if it is already present, update it, otherwise add it
+        if (this.repo.getSystemMetadata("last_player_update") == null) {
+            this.repo.save(new SystemMetadata("last_player_update", now.toString()));
+        } else {
+            this.repo.updateSystemMetadata("last_player_update", now.toString());
+        }
+    }
+
+    
 
     /**
      * Clears the screen. Utility method for cleaning the terminal

@@ -21,16 +21,14 @@ public class SleeperRequestHandler {
     }
 
     /**
-     * Get all the players from api. Read as a InputStream because it is a very
-     * large
-     * response (multiple megabytes).
+     * Get all the players from api. Returns a large response (multiple megabytes).
      * 
      * @return The response from sleeper api
      * @throws HttpConnectionException if an I/O error occurs when
      *                                     sending or receiving or if the request is
      *                                     interrupted
      */
-    public static HttpResponse<InputStream> getPlayers()
+    public static HttpResponse<String> getPlayers()
             throws HttpConnectionException {
         HttpClient client = HttpClient.newHttpClient();
 
@@ -42,7 +40,7 @@ public class SleeperRequestHandler {
 
         // send the request and get the response
         try {
-            HttpResponse<InputStream> response = client.send(request, BodyHandlers.ofInputStream());
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
             return response;
         } catch (Exception e) {
             GlobalLogger.error("Could not get players", e);
@@ -55,7 +53,6 @@ public class SleeperRequestHandler {
      * 
      * @param username
      * @return The response from sleeper api
-     * @throws IOException          if an I/O error occurs when sending or receiving
      * @throws HttpConnectionException if an I/O error occurs when
      *                                     sending or receiving or if the request is
      *                                     interrupted

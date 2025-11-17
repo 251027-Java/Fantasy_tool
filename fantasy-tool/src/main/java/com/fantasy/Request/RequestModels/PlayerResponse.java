@@ -5,7 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
-public class PlayersResponse {
+public class PlayerResponse {
     @JsonProperty("player_id")
     private String playerId;
 

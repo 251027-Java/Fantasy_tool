@@ -1,7 +1,7 @@
 -- Active: 1762362649699@@127.0.0.1@5432@film
 -- drop tables if they already exist
-drop DATABASE IF EXISTS fantasydb;
-create DATABASE fantasydb;
+-- drop DATABASE IF EXISTS fantasydb;
+-- create DATABASE fantasydb;
 
 -- create tables
 
