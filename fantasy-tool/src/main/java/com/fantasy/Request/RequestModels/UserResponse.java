@@ -1,26 +1,20 @@
-package com.fantasy.Model;
+package com.fantasy.Request.RequestModels;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "users")
-public class User {
-
-    @Column(name = "user_id_num")  
+public class UserResponse {
+    
+    @JsonProperty("user_id")
     private long userId;
 
-    @Column(name = "display_name")
+    @JsonProperty("display_name")
     private String displayName;
 
-    public User() {}    
+    public UserResponse() {}    
 
     // TODO: update this to have team name
 
-    public User(long userId, String displayName) {
+    public UserResponse(long userId, String displayName) {
         this.userId = userId;
         this.displayName = displayName;
     }
@@ -43,8 +37,6 @@ public class User {
 
     @Override
     public String toString() {
-        return "User [userId=" + userId + ", displayName=" + displayName + "]";
+        return "UserResponse [userId=" + userId + ", displayName=" + displayName + "]";
     }
-
-
 }

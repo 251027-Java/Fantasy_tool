@@ -43,4 +43,11 @@ public class GlobalLogger {
         actualLogger.debug(message, t);
     }
 
+    public static void trace(String message) {
+        if (actualLogger == null) {
+            actualLogger = LoggerFactory.getLogger(GlobalLogger.class);
+        }
+        actualLogger.trace(message);
+    }
+
 }

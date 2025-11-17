@@ -26,7 +26,7 @@ public class SleeperRequestHandler {
      * response (multiple megabytes).
      * 
      * @return The response from sleeper api
-     * @throws ExceptionInInitializerError if an I/O error occurs when
+     * @throws HttpConnectionException if an I/O error occurs when
      *                                     sending or receiving or if the request is
      *                                     interrupted
      */
@@ -56,7 +56,9 @@ public class SleeperRequestHandler {
      * @param username
      * @return The response from sleeper api
      * @throws IOException          if an I/O error occurs when sending or receiving
-     * @throws InterruptedException if the request is interrupted
+     * @throws HttpConnectionException if an I/O error occurs when
+     *                                     sending or receiving or if the request is
+     *                                     interrupted
      */
     public static HttpResponse<String> getUserFromUsername(String username)
             throws HttpConnectionException {
@@ -84,8 +86,9 @@ public class SleeperRequestHandler {
      * @param user_id the user_id from sleeper
      * @param season  the year to get the leagues
      * @return The response from sleeper api
-     * @throws IOException          if an I/O error occurs when sending or receiving
-     * @throws InterruptedException if the request is interrupted
+     * @throws HttpConnectionException if an I/O error occurs when
+     *                                     sending or receiving or if the request is
+     *                                     interrupted
      */
     public static HttpResponse<String> getLeaguesFromUserIDAndSeason(long user_id, int seasonYear)
             throws HttpConnectionException {
@@ -93,12 +96,13 @@ public class SleeperRequestHandler {
 
         // build an HttpRequest
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "user/" + user_id + "/leagues/nfl/" + seasonYear))
+                .uri(URI.create(baseUrl + "/user/" + user_id + "/leagues/nfl/" + seasonYear))
                 .GET()
                 .build();
 
         // send the request and get the response
         try {
+            GlobalLogger.debug("Making " + request.method()+" request to " + request.uri().toString() );
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
             return response;
         } catch (Exception e) {
@@ -108,7 +112,40 @@ public class SleeperRequestHandler {
                             user_id,
                             seasonYear),
                     e);
-            throw new HttpConnectionException("");
+            throw new HttpConnectionException("Error getting leagues from sleeper api");
+        }
+    }
+
+    /**
+     * Get all the users from a sleeper league
+     * @param leagueId the Id of the league to get users from
+     * @return The response from sleeper api
+     * @throws HttpConnectionException if an I/O error occurs when
+     *                                 sending or receiving or if the request is
+     *                                 interrupted
+     */
+    public static HttpResponse<String> getUsersFromLeague(long leagueId) 
+        throws HttpConnectionException {
+        HttpClient client = HttpClient.newHttpClient();
+
+        // build an HttpRequest
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/league/" + leagueId + "/users"))
+                .GET()
+                .build();
+
+        // send the request and get the response
+        try {
+            GlobalLogger.debug("Making " + request.method()+" request to " + request.uri().toString() );
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            return response;
+        } catch (Exception e) {
+            GlobalLogger.error(
+                    String.format(
+                            "Could not get users for league with ID '%s'",
+                            leagueId),
+                    e);
+            throw new HttpConnectionException("Error getting leagues from sleeper api");
         }
     }
 }

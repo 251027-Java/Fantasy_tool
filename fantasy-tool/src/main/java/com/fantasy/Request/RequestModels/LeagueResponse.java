@@ -22,40 +22,51 @@ public class LeagueResponse {
         return numTeams;
     }
 
-    public void setNumTeams(int total_rosters) {
-        this.numTeams = total_rosters;
+    public void setNumTeams(int numTeams) {
+        this.numTeams = numTeams;
     }
 
-    public int getSeason() {
+    public int getSeasonYear() {
         return seasonYear;
     }
 
-    public void setSeason(int season) {
-        this.seasonYear = season;
+    public void setSeasonYear(int seasonYear) {
+        this.seasonYear = seasonYear;
     }
 
-    public long getLeague_id() {
+    public long getLeagueId() {
         return leagueId;
     }
 
-    public void setLeague_id(long league_id) {
-        this.leagueId = league_id;
+    public void setLeagueId(long leagueId) {
+        this.leagueId = leagueId;
     }
 
-    public long getDraft_id() {
+    public long getDraftId() {
         return draftId;
     }
 
-    public void setDraft_id(long draft_id) {
-        this.draftId = draft_id;
+    public void setDraftId(long draftId) {
+        this.draftId = draftId;
     }
 
     public String getName() {
-        throw new UnsupportedOperationException("Unimplemented method 'getName'");
+        return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "LeagueResponse{" +
+                "numTeams=" + numTeams +
+                ", seasonYear=" + seasonYear +
+                ", leagueId=" + leagueId +
+                ", draftId=" + draftId +
+                ", name='" + name + '\'' +
+                '}';
     }
 
 

@@ -26,7 +26,7 @@
         <!-- <mapping class="com.fantasy.Entities.Player"/>
         <mapping class="com.fantasy.Entities.User"/> -->
         <mapping class="com.fantasy.Model.League"/>
-        <!-- <mapping class="com.fantasy.Entities.RosterUser"/>  -->
+        <mapping class="com.fantasy.Model.Draft"/>
         <!-- etc -->
     </session-factory>
 </hibernate-configuration>

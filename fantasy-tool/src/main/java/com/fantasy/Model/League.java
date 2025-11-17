@@ -49,11 +49,11 @@ public class League {
         this.leagueName = name;
     }
 
-    public int getSeason() {
+    public int getSeasonYear() {
         return seasonYear;
     }
 
-    public void setSeason(int seasonYear) {
+    public void setSeasonYear(int seasonYear) {
         this.seasonYear = seasonYear;
     }
 
