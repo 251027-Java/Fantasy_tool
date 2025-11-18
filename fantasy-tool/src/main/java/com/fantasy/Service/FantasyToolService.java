@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import com.Logger.GlobalLogger;
@@ -72,6 +73,7 @@ public class FantasyToolService implements Closeable {
                 List<PlayerResponse> players = this.getPlayers();
 
                 // process players into db format and insert
+                this.processPlayers(players);
 
                 // update players last updated
                 this.updateLastPlayerUpdate();
@@ -102,6 +104,28 @@ public class FantasyToolService implements Closeable {
         
 
         // get league info
+    }
+
+    private void processPlayers(List<PlayerResponse> players) {
+        
+        for (PlayerResponse playerResp : players) {
+            // add player, overwriting if already exists
+            Player player = new Player(
+                playerResp.getPlayerId(),
+                playerResp.getFullName(),
+                playerResp.getTeam(),
+                playerResp.getRotoworldId(),
+                playerResp.getStatsId(),
+                playerResp.getFantasyDataId()
+            );
+            this.repo.save(player);
+
+            // add player positions 
+            for (String position : playerResp.getFantasyPositions()) {
+                PlayerPosition playerPosition = new PlayerPosition(player.getPlayerId(), position);
+                this.repo.save(playerPosition);
+            }
+        }
     }
 
     /**
@@ -216,7 +240,9 @@ public class FantasyToolService implements Closeable {
             if (response.statusCode() == 200) {
                 // TODO: need to do slightly special parsing here since 
                 // it's {key : PlayerResponse, ... } format. 
-                List<PlayerResponse> resp = om.readValue(response.body(), new TypeReference<List<PlayerResponse>>(){});
+                Map<String, PlayerResponse> map =
+                om.readValue(response.body(), new TypeReference<Map<String, PlayerResponse>>() {});
+                List<PlayerResponse> resp = new ArrayList<>(map.values());
                 return resp;
             }
         } catch (Exception e) {

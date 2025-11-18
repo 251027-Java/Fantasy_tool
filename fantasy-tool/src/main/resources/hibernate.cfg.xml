@@ -23,10 +23,12 @@
         <property name="hibernate.format_sql">true</property>
 
         <!-- List of annotated entities -->
-        <!-- <mapping class="com.fantasy.Entities.Player"/> -->
+        <mapping class="com.fantasy.Model.Player"/>
+        <mapping class="com.fantasy.Model.SystemMetadata">
         <mapping class="com.fantasy.Model.User"/> 
         <mapping class="com.fantasy.Model.League"/>
         <mapping class="com.fantasy.Model.Draft"/>
+        <mapping class="com.fantasy.Model.PlayerPosition"/>
         <!-- etc -->
     </session-factory>
 </hibernate-configuration>

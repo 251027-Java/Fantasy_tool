@@ -55,6 +55,8 @@ public class PlayerResponse {
     public Integer getFantasyDataId() { return fantasyDataId; }
     public void setFantasyDataId(Integer fantasyDataId) { this.fantasyDataId = fantasyDataId; }
 
+    public String getFullName() { return firstName + " " + lastName; }
+
     @Override
     public String toString() {
         return String.format("Player{id=%s, team=%s, name=%s %s, pos=%s}",

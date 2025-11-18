@@ -9,12 +9,28 @@ import org.hibernate.Transaction;
 
 public class HibernateRepo implements IRepository {
 
-    public void save(Player player) {
+    public void saveOrUpdate(Player player) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            // check if player already exists, if it does update, otherwise insert
+            Player dbPlayer = this.getPlayerByPlayerId(player.getPlayerId());
             Transaction tx = session.beginTransaction();
-            session.persist(player);
+            if (dbPlayer == null) {
+                session.persist(player);
+            } else {
+                dbPlayer.setFullName(player.getFullName());
+                dbPlayer.setTeam(player.getTeam());
+                dbPlayer.setRotoworldId(player.getRotoworldId());
+                dbPlayer.setStatsId(player.getStatsId());
+                dbPlayer.setFantasyDataId(player.getFantasyDataId());
+            }
             tx.commit();
         }
+    }
+
+    private Player getPlayerByPlayerId(String playerId) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.find(Player.class, playerId);
+        }   
     }
 
     public void save(League league) {
@@ -46,6 +62,70 @@ public class HibernateRepo implements IRepository {
             Transaction tx = session.beginTransaction();
             session.persist(systemMetadata);
             tx.commit();
+        }
+    }
+
+    public void saveOrUpdate(List<PlayerPosition> playerPositions) {
+        if (playerPositions.size() == 0) {
+            return;
+        }
+        String playerId = playerPositions.get(0).getPlayerId();
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            // get all player positions in the db for this player
+            List<PlayerPosition> existingPlayerPositions = this.getPlayerPositionsByPlayerId(playerId);
+            // if empty, insert all player positions in list
+            if (existingPlayerPositions.size() == 0) {
+                Transaction tx = session.beginTransaction();
+                for (PlayerPosition playerPosition : playerPositions) {
+                    session.persist(playerPosition);
+                }
+                tx.commit();
+                return;
+            } else { // find the ones that are not in the list and insert
+                for (PlayerPosition playerPosition : playerPositions) {
+                    int index = existingPlayerPositions.indexOf(playerPosition);
+                    boolean found = index != -1;
+                    if (!found) {
+                        Transaction tx = session.beginTransaction();
+                        session.persist(playerPosition);
+                        tx.commit();
+                    }
+                }
+
+                // find the existing ones that are no longer there and delete
+                for (PlayerPosition playerPosition : existingPlayerPositions) {
+                    int index = playerPositions.indexOf(playerPosition);
+                    boolean found = index != -1;
+                    if (!found) {
+                        Transaction tx = session.beginTransaction();
+                        // TODO: finish this
+                        session.remove();
+                        tx.commit();
+                    }
+                }
+            }
+
+            // if not null, update all player positions in database so that only 
+            // the positions in the list are in the database for that player
+
+
+            PlayerPosition existingPlayerPosition = session.find(PlayerPosition.class, playerPosition.getPlayerId());
+            if (existingPlayerPosition != null) {
+                existingPlayerPosition.setPosition(playerPosition.getPosition());
+            } else {
+                Transaction tx = session.beginTransaction();
+                session.persist(playerPosition);
+                tx.commit();
+            }
+        }
+    }
+
+    // get all player positions for a given playerid
+    public List<PlayerPosition> getPlayerPositionsByPlayerId(String playerId) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery("from PlayerPosition where playerId = :playerId", PlayerPosition.class)
+                .setParameter("playerId", playerId)
+                .getResultList();
         }
     }
 

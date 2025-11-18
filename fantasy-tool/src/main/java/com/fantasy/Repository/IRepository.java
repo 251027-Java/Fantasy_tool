@@ -8,7 +8,7 @@ import java.util.List;
 import com.fantasy.Model.*;
 
 public interface IRepository extends Closeable {
-    public void save(Player player);
+    public void saveOrUpdate(Player player);
     public void save(League league);
     public void save(Draft draft);
     public League getLeagueById(long id);
@@ -20,5 +20,6 @@ public interface IRepository extends Closeable {
     public void save(SystemMetadata systemMetadata);
     public void updateSystemMetadata(String string, String string2);
     public String getLastUpdatedPlayers();
+    public void saveOrUpdate(PlayerPosition playerPosition);
     
 }
