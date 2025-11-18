@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "draft")
 public class Draft {
+    
     @Id
     @Column(name = "draft_id")
     private long draftId;

@@ -2,12 +2,14 @@ package com.fantasy.Model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "player")
 public class Player {
     
+    @Id
     @Column(name = "player_id")
     private String playerId;
 

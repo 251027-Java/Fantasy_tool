@@ -16,7 +16,7 @@ public class Main {
     
         GlobalLogger.info("Starting application");
 
-        IRepository repo = new HibernateRepo();
+        IRepository repo = new JpaRepository();
         try (FantasyToolService service = new FantasyToolService(repo)) {
 
             service.start();

@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import javax.xml.crypto.Data;
+
 import com.Logger.GlobalLogger;
 import com.fantasy.Exception.HttpConnectionException;
 import com.fantasy.Model.*;
@@ -28,24 +30,35 @@ public class FantasyToolService implements Closeable {
     private final IRepository repo;
     private final Scanner scan;
     private static final ObjectMapper om = new ObjectMapper();
+    private DatabaseFormatter formatter;
 
     public FantasyToolService(IRepository repo) {
         this.repo = repo;
         this.scan = new Scanner(System.in);
+        this.formatter = new DatabaseFormatter(repo);
     }
 
     public void start() {
-        // get userId
         clearScreen();
         System.out.println("Welcome to Fantasy Tool!");
+        // get nfl state
+        NFLStateResponse nflState = RequestFormatter.getNFLState();
+        GlobalLogger.debug("NFL State gotten from sleeper: "+ nflState.toString());
+        int season = Integer.parseInt(nflState.getSeason());
+        int currWeek = Integer.parseInt(nflState.getDisplayWeek());
+        GlobalLogger.debug("Current season: " + season);
+        GlobalLogger.debug("Current week: " + currWeek);
+        
+        
+        // get userId
         long userId = this.getUserId();
         GlobalLogger.debug("UserId: " + userId);
         // clearScreen();
         // get leagues based on userId (assumes the current year)
-        List<LeagueResponse> leagues = this.getLeaguesFromUserId(userId); 
+        List<LeagueResponse> leagues = RequestFormatter.getLeaguesFromUserId(userId); 
         GlobalLogger.debug("Leagues gotten from sleeper: "+ leagues.toString());
         // process leagues into db format and insert, returning list of league ids
-        List<Long> leagueIds = this.processLeagueInfo(leagues);
+        List<Long> leagueIds = this.formatter.processLeagueInfo(leagues);
 
         // query database for leagues with league ids
         List<League> dbLeagues = this.repo.getLeaguesById(leagueIds);
@@ -59,10 +72,10 @@ public class FantasyToolService implements Closeable {
         
 
         // add users from chosen league into database (if not there already)
-        List<UserResponse> users = this.getUsersFromLeague(chosenLeagueId);
+        List<UserResponse> users = RequestFormatter.getUsersFromLeague(chosenLeagueId);
 
         // process users into db format
-        this.processUsers(users);
+        this.formatter.processUsers(users);
 
 
         // check if players have been updated recently
@@ -70,13 +83,18 @@ public class FantasyToolService implements Closeable {
             Boolean updatedRecently = this.playersUpdatedRecently();
             if (!updatedRecently) {
                 // get players from sleeper
-                List<PlayerResponse> players = this.getPlayers();
+                System.out.println("Players have not been updated recently, updating...");
+                List<PlayerResponse> players = RequestFormatter.getPlayers();
+
 
                 // process players into db format and insert
-                this.processPlayers(players);
+                this.formatter.processPlayers(players);
+                
 
                 // update players last updated
                 this.updateLastPlayerUpdate();
+                System.out.println("Players info updated");
+                GlobalLogger.debug("Players info updated");
             }
         } catch (DateTimeParseException e) {
             GlobalLogger.error(String.format("Could not parse last player update, date: %s", e.getParsedString()), e);
@@ -87,12 +105,19 @@ public class FantasyToolService implements Closeable {
         }
 
         // get roster mapping to user from sleeper
+        List<RosterUserResponse> rosterMapping = RequestFormatter.getRostersFromLeagueId(chosenLeagueId);
 
         // process roster mapping and insert to db
+        this.formatter.processRosterUser(rosterMapping);
 
-        // get rosters from sleeper
+        // for each week
+        for (int week = 1; week < currWeek; week++) {
+            
+        }
+            // get rosters from sleeper 
 
-        // process rosters and insert to db
+            // process rosters and insert to db
+
 
         // compute stats from rosters information (lots of logic here)
 
@@ -106,58 +131,6 @@ public class FantasyToolService implements Closeable {
         // get league info
     }
 
-    private void processPlayers(List<PlayerResponse> players) {
-        
-        for (PlayerResponse playerResp : players) {
-            // add player, overwriting if already exists
-            Player player = new Player(
-                playerResp.getPlayerId(),
-                playerResp.getFullName(),
-                playerResp.getTeam(),
-                playerResp.getRotoworldId(),
-                playerResp.getStatsId(),
-                playerResp.getFantasyDataId()
-            );
-            this.repo.save(player);
-
-            // add player positions 
-            for (String position : playerResp.getFantasyPositions()) {
-                PlayerPosition playerPosition = new PlayerPosition(player.getPlayerId(), position);
-                this.repo.save(playerPosition);
-            }
-        }
-    }
-
-    /**
-     * Process leagues into database format and insert. Also inputs draft skeleton
-     * into database
-     * @param leagues the response from sleeper
-     * @return list of league ids
-     */
-    private List<Long> processLeagueInfo(List<LeagueResponse> leagues) { 
-        List<Long> leagueIds = new ArrayList<>();
-        // put leagues and draft into database
-        for (LeagueResponse leagueResponse : leagues) {
-            // check if league already in database
-            if ( this.repo.getLeagueById(leagueResponse.getLeagueId()) == null) {
-                League league = new League(
-                leagueResponse.getLeagueId(),
-                leagueResponse.getNumTeams(), 
-                leagueResponse.getName(), 
-                leagueResponse.getSeasonYear());
-                this.repo.save(league);
-                GlobalLogger.debug("League added: " + league.toString());
-            }
-            // check if draft already in database
-            if (this.repo.getDraftById(leagueResponse.getDraftId()) == null) {
-                Draft draft = new Draft(leagueResponse.getDraftId(), leagueResponse.getLeagueId());
-                this.repo.save(draft);
-                GlobalLogger.debug("Draft added: " + draft.toString());
-            }
-            leagueIds.add(leagueResponse.getLeagueId());
-        }
-        return leagueIds;
-    }
     
     /**
      * Get userId from sleeper based on input username from user
@@ -186,27 +159,6 @@ public class FantasyToolService implements Closeable {
         } while (true);
     }
 
-    /**
-     * Get leagues for the current year from sleeper based on userId
-     * @param userId the user_id of leagues to look for
-     * @return list of leagues
-     */
-    private List<LeagueResponse> getLeaguesFromUserId(long userId) {
-        // get the current year from time clock
-        int year = LocalDate.now().getYear();
-
-        try {
-            HttpResponse<String> response = SleeperRequestHandler.getLeaguesFromUserIDAndSeason(userId, year);
-            if (response.statusCode() == 200) {
-                List<LeagueResponse> resp = om.readValue(response.body(), new TypeReference<List<LeagueResponse>>(){});
-                return resp;
-            }
-        } catch (Exception e) {
-            GlobalLogger.debug(String.format("Could not get leagues from user_id '%s'", userId), e);
-        }
-        System.out.println("No leagues found");
-        return List.of();
-    } 
 
     /**
      * Ask user to choose a league from options
@@ -234,60 +186,16 @@ public class FantasyToolService implements Closeable {
         // return the id of the chosen league
     }
 
-    private List<PlayerResponse> getPlayers() {
-        try {
-            HttpResponse<String> response = SleeperRequestHandler.getPlayers();
-            if (response.statusCode() == 200) {
-                // TODO: need to do slightly special parsing here since 
-                // it's {key : PlayerResponse, ... } format. 
-                Map<String, PlayerResponse> map =
-                om.readValue(response.body(), new TypeReference<Map<String, PlayerResponse>>() {});
-                List<PlayerResponse> resp = new ArrayList<>(map.values());
-                return resp;
-            }
-        } catch (Exception e) {
-            GlobalLogger.debug("Could not get players", e);
-        }
-        System.out.println("No users found");
-        return List.of();
-    }
-
-    /**
-     * Get users from a sleeper league based on leagueId
-     * @param leagueId the id of the league
-     * @return a list of users
-     */
-    public List<UserResponse> getUsersFromLeague(long leagueId) {
-        try {
-            HttpResponse<String> response = SleeperRequestHandler.getUsersFromLeague(leagueId);
-            if (response.statusCode() == 200) {
-                List<UserResponse> resp = om.readValue(response.body(), new TypeReference<List<UserResponse>>(){});
-                return resp;
-            }
-        } catch (Exception e) {
-            GlobalLogger.debug(String.format("Could not get users from league_id '%s'", leagueId), e);
-        }
-        System.out.println("No users found");
-        return List.of();
-    }
-
-    public void processUsers(List<UserResponse> users) { 
-        for (UserResponse user : users) {
-            // check if user already in database
-            if (this.repo.getUserById(user.getUserId()) == null) {
-                User dbUser = new User(user.getUserId(), user.getDisplayName());
-                this.repo.save(dbUser);
-                GlobalLogger.debug("User added: " + dbUser.toString());
-            }
-        }
-    }
+ 
 
     private boolean playersUpdatedRecently() throws DateTimeParseException {
-        String lastUpdateStr = this.repo.getSystemMetadata("last_player_update").getValue();
+        SystemMetadata lastUpdateData = this.repo.getSystemMetadata("last_player_update");
 
-        if (lastUpdateStr == null) { // hasn't been put in db yet
+        if (lastUpdateData == null) { // hasn't been put in db yet
             return false;
         }
+
+        String lastUpdateStr = lastUpdateData.getValue();
 
         LocalDateTime lastUpdate = LocalDateTime.parse(lastUpdateStr);
         LocalDateTime now = LocalDateTime.now();

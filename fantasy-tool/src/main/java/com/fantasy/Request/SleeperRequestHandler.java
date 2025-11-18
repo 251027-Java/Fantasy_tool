@@ -145,4 +145,86 @@ public class SleeperRequestHandler {
             throw new HttpConnectionException("Error getting leagues from sleeper api");
         }
     }
+
+
+    /**
+     * Get all the current rosters from a sleeper league
+     * @param leagueId the Id of the league to get rosters from
+     * @return The response from sleeper api
+     * @throws HttpConnectionException
+     */
+    public static HttpResponse<String> getRostersFromLeague(long leagueId) 
+        throws HttpConnectionException {
+        HttpClient client = HttpClient.newHttpClient();
+
+        // build an HttpRequest
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/league/" + leagueId + "/rosters"))
+                .GET()
+                .build();
+
+        // send the request and get the response
+        try {
+            GlobalLogger.debug("Making " + request.method()+" request to " + request.uri().toString() );
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            return response;
+        } catch (Exception e) {
+            GlobalLogger.error(
+                    String.format(
+                            "Could not get rosters for league with ID '%s'",
+                            leagueId),
+                    e);
+            throw new HttpConnectionException("Error getting rosters from sleeper api");
+        }
+    }
+
+    public static HttpResponse<String> getMatchupsFromLeagueIdAndWeek(long leagueId, int weekNum) 
+        throws HttpConnectionException {
+        HttpClient client = HttpClient.newHttpClient();
+
+        // build an HttpRequest
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/league/" + leagueId + "/matchups/" + weekNum))
+                .GET()
+                .build();
+
+        // send the request and get the response
+        try {
+            GlobalLogger.debug("Making " + request.method()+" request to " + request.uri().toString() );
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            return response;
+        } catch (Exception e) {
+            GlobalLogger.error(
+                    String.format(
+                            "Could not get rosters for league with ID '%s'",
+                            leagueId),
+                    e);
+            throw new HttpConnectionException("Error getting rosters from sleeper api");
+        }
+    }
+
+    public static HttpResponse<String> getNFLState() 
+        throws HttpConnectionException {
+        HttpClient client = HttpClient.newHttpClient();
+
+        // build an HttpRequest
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/state/nfl"))
+                .GET()
+                .build();
+
+        // send the request and get the response
+        try {
+            GlobalLogger.debug("Making " + request.method()+" request to " + request.uri().toString() );
+            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+            return response;
+        } catch (Exception e) {
+            GlobalLogger.error(
+                    String.format(
+                            "Could not get rosters for league with ID '%s'",
+                            baseUrl),
+                    e);
+            throw new HttpConnectionException("Error getting rosters from sleeper api");
+        }
+    }
 }

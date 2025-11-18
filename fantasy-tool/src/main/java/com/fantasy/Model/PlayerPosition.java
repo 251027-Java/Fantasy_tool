@@ -1,28 +1,32 @@
 package com.fantasy.Model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 
 @Entity
-@Table(name = "player_positions")
+@Table(name= "player_position")
 public class PlayerPosition {
 
-    @Column(name = "player_id") 
-    private String playerId;
-
-    @Column(name = "position")
-    private String position;
+    @EmbeddedId
+    private PlayerPositionId id;
 
     public PlayerPosition() {}
-    public PlayerPosition(String playerId, String position) {
-        this.playerId = playerId;
-        this.position = position;
+
+    public PlayerPosition(PlayerPositionId id) {
+        this.id = id;
     }
 
-    public String getPlayerId() { return playerId; }
-    public void setPlayerId(String playerId) { this.playerId = playerId; }
-    public String getPosition() { return position; }
-    public void setPosition(String position) { this.position = position; }
+    public PlayerPositionId getId() { return id; }
+    public void setId(PlayerPositionId id) { this.id = id; }
+
+    @Override
+    public boolean equals(Object o ) {
+        if (o instanceof PlayerPosition playerPosition) {
+            return this.id.equals(playerPosition.id);
+        }
+        return false;
+    }
+
+
     
 }

@@ -20,6 +20,9 @@ public interface IRepository extends Closeable {
     public void save(SystemMetadata systemMetadata);
     public void updateSystemMetadata(String string, String string2);
     public String getLastUpdatedPlayers();
-    public void saveOrUpdate(PlayerPosition playerPosition);
+    public void saveOrUpdate(List<PlayerPosition> playerPositions);
+    public RosterUser getRosterUserByUserIdAndLeagueId(long userId, long leagueId);
+    public void save(RosterUser dbRoster);
+    public Roster getRosterByLeagueIdAndRosterIdAndWeek(long leagueId, Integer rosterId, int weekNum);
     
 }
