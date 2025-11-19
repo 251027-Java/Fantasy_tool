@@ -98,19 +98,28 @@ public class DatabaseFormatter {
     /**
      * Process rosters user mapping into database
      * @param rosterResponses the response from sleeper
+     * @return 
      */
-    public void processRosterUser(List<RosterUserResponse> rosterResponses) {
+    public List<Long> processRosterUser(List<RosterUserResponse> rosterResponses) {
+        List<Long> rosterUserIds = new ArrayList<>();
         for (RosterUserResponse roster : rosterResponses) {
             // check if roster user mapping already in database
             // (done by checking for user_id and league_id)
-            if (this.repo.getRosterUserByUserIdAndLeagueId(roster.getUserId(), roster.getLeagueId()) == null) {
+            RosterUser dbRosterUser = this.repo.getRosterUserByUserIdAndLeagueId(roster.getUserId(), roster.getLeagueId());
+            RosterUser newRosterUser;
+            if (dbRosterUser == null) {
                 // insert new roster user mapping
-                RosterUser dbRoster = new RosterUser(roster.getRosterId(), roster.getUserId(), roster.getLeagueId());
-                this.repo.save(dbRoster);
-                GlobalLogger.debug("RosterUser added: " + dbRoster.toString());
+                newRosterUser = new RosterUser(roster.getRosterId(), roster.getUserId(), roster.getLeagueId());
+                this.repo.save(newRosterUser);
+                GlobalLogger.debug("RosterUser added: " + newRosterUser.toString());
+            } else {
+                newRosterUser = dbRosterUser;
             }
+            rosterUserIds.add(newRosterUser.getRosterUserId());
         }
+        return rosterUserIds;
     }
+        
 
     public void processMatchups(List<MatchupResponse> matchups, long leagueId, int weekNum) {
         for (MatchupResponse matchup : matchups) {

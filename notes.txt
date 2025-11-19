@@ -70,8 +70,3 @@ draft_pick_to_league
     league_id
     draft_id
 
-//TODO: add data for last access to be used for querying data for a single user
-and for getting players at most once a day.
-
-
-//TODO: add roster_id col to roster_user_id

@@ -10,6 +10,7 @@ import java.util.List;
 
 public class JpaRepository implements IRepository {
 
+
     public void saveOrUpdate(Player player) {
         EntityManager em = JPAUtil.getEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -217,6 +218,34 @@ public class JpaRepository implements IRepository {
             return em.createQuery(
                     "from League where id in :ids",
                     League.class).setParameter("ids", leagueIds).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<WeekScore> getWeekScoresByLeagueIdAndWeek(long leagueId, int weekNum) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery(
+                    "from WeekScore w join RosterUser r on w.id.rosterUserId = r.rosterUserId where w.id.weekNum = :weekNum and r.leagueId = :leagueId",
+                    WeekScore.class).setParameter("weekNum", weekNum).setParameter("leagueId", leagueId).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<WeekScore> getWeekScoresByRosterUserIdsAndWeek(List<Long> rosterUserIds, int weekNum) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery(
+                    """
+                            from WeekScore w where w.id.weekNum = :weekNum 
+                            and w.id.rosterUserId in :rosterUserIds 
+                            """,
+                    WeekScore.class)
+                    .setParameter("weekNum", weekNum)
+                    .setParameter("rosterUserIds", rosterUserIds)
+                    .getResultList();
         } finally {
             em.close();
         }

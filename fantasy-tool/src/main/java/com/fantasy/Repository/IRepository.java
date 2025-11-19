@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fantasy.Model.*;
+import com.fantasy.Request.RequestModels.LeagueResponse;
 
 public interface IRepository extends Closeable {
     public void saveOrUpdate(Player player);
@@ -26,5 +27,7 @@ public interface IRepository extends Closeable {
     public RosterUser getRosterUserByRosterIdAndLeagueId(Integer rosterId, long leagueId);
     public WeekScore getWeekScoreById(WeekScoreId weekNumId);
     public void save(WeekScore weekScore);
+    public List<WeekScore> getWeekScoresByLeagueIdAndWeek(long chosenLeagueId, int week);
+    public List<WeekScore> getWeekScoresByRosterUserIdsAndWeek(List<Long> rosterUserIds, int week);
     
 }

@@ -108,10 +108,17 @@ public class FantasyToolService implements Closeable {
         List<RosterUserResponse> rosterMapping = RequestFormatter.getRostersFromLeagueId(chosenLeagueId);
 
         // process roster mapping and insert to db
-        this.formatter.processRosterUser(rosterMapping);
+        List<Long> rosterUserIds = this.formatter.processRosterUser(rosterMapping);
 
         // for each week
         for (int week = 1; week < currWeek; week++) {
+            // check if week scores for this league is already in database
+            // assumes that if a single user's week score is in the database, 
+            // all users' week scores are
+            if (this.repo.getWeekScoresByRosterUserIdsAndWeek(rosterUserIds, week).size() > 0) {
+                continue;
+            }
+
             // get rosters from sleeper 
             List<MatchupResponse> matchups = RequestFormatter.getMatchupsFromLeagueIdAndWeek(chosenLeagueId, week);
 

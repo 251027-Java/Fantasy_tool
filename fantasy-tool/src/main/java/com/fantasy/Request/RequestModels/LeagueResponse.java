@@ -2,6 +2,17 @@ package com.fantasy.Request.RequestModels;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.jackson.Jacksonized;
+
+@Data
+@Builder
+@Jacksonized
+@NoArgsConstructor
+@AllArgsConstructor
 public class LeagueResponse {
     @JsonProperty("total_rosters")
     private int numTeams;
@@ -18,56 +29,8 @@ public class LeagueResponse {
     private String name;
 
 
-    public int getNumTeams() {
-        return numTeams;
-    }
 
-    public void setNumTeams(int numTeams) {
-        this.numTeams = numTeams;
-    }
 
-    public int getSeasonYear() {
-        return seasonYear;
-    }
-
-    public void setSeasonYear(int seasonYear) {
-        this.seasonYear = seasonYear;
-    }
-
-    public long getLeagueId() {
-        return leagueId;
-    }
-
-    public void setLeagueId(long leagueId) {
-        this.leagueId = leagueId;
-    }
-
-    public long getDraftId() {
-        return draftId;
-    }
-
-    public void setDraftId(long draftId) {
-        this.draftId = draftId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return "LeagueResponse{" +
-                "numTeams=" + numTeams +
-                ", seasonYear=" + seasonYear +
-                ", leagueId=" + leagueId +
-                ", draftId=" + draftId +
-                ", name='" + name + '\'' +
-                '}';
-    }
 
 
 }
