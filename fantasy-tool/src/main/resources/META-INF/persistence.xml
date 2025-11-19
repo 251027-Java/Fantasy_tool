@@ -16,6 +16,7 @@
         <class>com.fantasy.Model.Draft</class>
         <class>com.fantasy.Model.PlayerPosition</class>
         <class>com.fantasy.Model.RosterUser</class>
+        <class>com.fantasy.Model.WeekScore</class>
 
         <properties>
             <!-- JDBC Connection -->

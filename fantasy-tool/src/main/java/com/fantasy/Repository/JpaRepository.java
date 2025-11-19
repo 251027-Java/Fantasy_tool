@@ -67,6 +67,10 @@ public class JpaRepository implements IRepository {
         persistEntity(rosterUser);
     }
 
+    public void save(WeekScore weekScore) {
+        persistEntity(weekScore);
+    }
+
     private void persistEntity(Object entity) {
         EntityManager em = JPAUtil.getEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -165,6 +169,10 @@ public class JpaRepository implements IRepository {
         return findById(SystemMetadata.class, key);
     }
 
+    public WeekScore getWeekScoreById(WeekScoreId weekNumId) {
+        return findById(WeekScore.class, weekNumId);
+    }
+
     private <T> T findById(Class<T> cls, Object id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -181,6 +189,20 @@ public class JpaRepository implements IRepository {
                     "from RosterUser where userId = :userId and leagueId = :leagueId",
                     RosterUser.class)
                 .setParameter("userId", userId)
+                .setParameter("leagueId", leagueId)
+                .getSingleResultOrNull();
+        } finally {
+            em.close();
+        }
+    }
+
+    public RosterUser getRosterUserByRosterIdAndLeagueId(Integer rosterId, long leagueId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery(
+                    "from RosterUser where rosterId = :rosterId and leagueId = :leagueId",
+                    RosterUser.class)
+                .setParameter("rosterId", rosterId)
                 .setParameter("leagueId", leagueId)
                 .getSingleResultOrNull();
         } finally {

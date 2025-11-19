@@ -4,20 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.Logger.GlobalLogger;
-import com.fantasy.Model.Draft;
-import com.fantasy.Model.League;
-import com.fantasy.Model.Matchup;
-import com.fantasy.Model.Player;
-import com.fantasy.Model.PlayerPosition;
-import com.fantasy.Model.PlayerPositionId;
-import com.fantasy.Model.RosterUser;
-import com.fantasy.Model.User;
+import com.fantasy.Model.*;
 import com.fantasy.Repository.IRepository;
-import com.fantasy.Request.RequestModels.LeagueResponse;
-import com.fantasy.Request.RequestModels.MatchupResponse;
-import com.fantasy.Request.RequestModels.PlayerResponse;
-import com.fantasy.Request.RequestModels.RosterUserResponse;
-import com.fantasy.Request.RequestModels.UserResponse;
+import com.fantasy.Request.RequestModels.*;
 
 /**
  * DatabaseFormatter is a class used to format the POJOs from sleeper into
@@ -125,11 +114,18 @@ public class DatabaseFormatter {
 
     public void processMatchups(List<MatchupResponse> matchups, long leagueId, int weekNum) {
         for (MatchupResponse matchup : matchups) {
-            // check if matchup already in database by league_id, roster_id, week
-            if (this.repo.getRosterByLeagueIdAndRosterIdAndWeek(leagueId, matchup.getRosterId(), weekNum) == null) {
-                Matchup dbMatchup = new Matchup(matchup.getMatchupId(), matchup.getRosterId(), matchup.getPoints());
-                this.repo.save(dbMatchup);
-                GlobalLogger.debug("Matchup added: " + dbMatchup.toString());
+            // check if week score already in database
+            RosterUser rosterUser = this.repo.getRosterUserByRosterIdAndLeagueId(matchup.getRosterId(), leagueId);
+            WeekScoreId weekNumId = new WeekScoreId(rosterUser.getRosterUserId(), weekNum);
+            if (this.repo.getWeekScoreById(weekNumId) == null) {
+                // get roster user mapping by user_id and league_id
+                
+                WeekScore weekScore = new WeekScore(weekNumId, matchup.getPoints());
+                this.repo.save(weekScore);
+                GlobalLogger.debug("WeekScore added: " + weekScore.toString());
+
+                // TODO: add player score data per week to database for advanced stat calculation
+                
             }
         }
     }

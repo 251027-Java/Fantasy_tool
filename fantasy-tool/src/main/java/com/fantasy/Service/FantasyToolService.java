@@ -112,11 +112,13 @@ public class FantasyToolService implements Closeable {
 
         // for each week
         for (int week = 1; week < currWeek; week++) {
-            
-        }
             // get rosters from sleeper 
+            List<MatchupResponse> matchups = RequestFormatter.getMatchupsFromLeagueIdAndWeek(chosenLeagueId, week);
 
             // process rosters and insert to db
+            this.formatter.processMatchups(matchups, chosenLeagueId, week);
+        }
+            
 
 
         // compute stats from rosters information (lots of logic here)

@@ -23,6 +23,8 @@ public interface IRepository extends Closeable {
     public void saveOrUpdate(List<PlayerPosition> playerPositions);
     public RosterUser getRosterUserByUserIdAndLeagueId(long userId, long leagueId);
     public void save(RosterUser dbRoster);
-    public Roster getRosterByLeagueIdAndRosterIdAndWeek(long leagueId, Integer rosterId, int weekNum);
+    public RosterUser getRosterUserByRosterIdAndLeagueId(Integer rosterId, long leagueId);
+    public WeekScore getWeekScoreById(WeekScoreId weekNumId);
+    public void save(WeekScore weekScore);
     
 }

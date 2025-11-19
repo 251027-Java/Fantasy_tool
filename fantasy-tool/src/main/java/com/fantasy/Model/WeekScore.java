@@ -10,12 +10,12 @@ public class WeekScore {
     private WeekScoreId id;
 
     @Column(name = "score")
-    private int score;
+    private Double score;
 
     
     public WeekScore() {}
     
-    public WeekScore(WeekScoreId id, int score) {
+    public WeekScore(WeekScoreId id, Double score) {
         this.id = id;
         this.score = score;
     }
@@ -28,11 +28,11 @@ public class WeekScore {
         this.id = id;
     }
 
-    public int getScore() {
+    public Double getScore() {
         return score;
     }
 
-    public void setScore(int score) {
+    public void setScore(Double score) {
         this.score = score;
     }
 
