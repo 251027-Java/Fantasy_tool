@@ -6,7 +6,9 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JpaRepository implements IRepository {
 
@@ -30,6 +32,45 @@ public class JpaRepository implements IRepository {
             }
 
             tx.commit();
+        } catch (Exception ex) {
+            if (tx.isActive())
+                tx.rollback();
+            throw ex;
+        } finally {
+            em.close();
+        }
+    }
+
+    public RosterUser saveOrUpdate(RosterUser rosterUser) {
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        try {
+            tx.begin();
+
+            RosterUser dbRosterUser = em.find(RosterUser.class, rosterUser.getRosterUserId());
+            if (dbRosterUser == null) {
+                em.persist(rosterUser);
+                dbRosterUser = rosterUser;
+            } else {
+                // update all fields of RosterUser except rosterUserId
+                dbRosterUser.setRosterId(rosterUser.getRosterId());
+                dbRosterUser.setUserId(rosterUser.getUserId());
+                dbRosterUser.setLeagueId(rosterUser.getLeagueId());
+                dbRosterUser.setWins(rosterUser.getWins());
+                dbRosterUser.setTies(rosterUser.getTies());
+                dbRosterUser.setLosses(rosterUser.getLosses());
+                dbRosterUser.setFptsDecimal(rosterUser.getFptsDecimal());
+                dbRosterUser.setFptsAgainstDecimal(rosterUser.getFptsAgainstDecimal());
+                dbRosterUser.setFptsAgainst(rosterUser.getFptsAgainst());
+                dbRosterUser.setFpts(rosterUser.getFpts());
+
+            }
+
+            tx.commit();
+
+            // return updated RosterUser
+            return dbRosterUser;
         } catch (Exception ex) {
             if (tx.isActive())
                 tx.rollback();
@@ -153,6 +194,28 @@ public class JpaRepository implements IRepository {
             em.close();
         }
     }
+
+    public Map<Long, String> getRosterUserIdToName() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            List<RosterUserIdToName> list = em.createQuery(
+                "select new com.fantasy.Model.RosterUserIdToName(r.rosterUserId, u.displayName) " +
+                "from RosterUser r " +
+                "join User u on r.userId = u.userId",
+                RosterUserIdToName.class
+            ).getResultList();
+
+            Map<Long, String> map = new HashMap<>();
+            for (RosterUserIdToName item : list) {
+                map.put(item.getRosterUserId(), item.getDisplayName());
+            }
+            return map;
+
+        } finally {
+            em.close();
+        }
+    }
+
 
     public League getLeagueById(long id) {
         return findById(League.class, id);

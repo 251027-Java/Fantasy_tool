@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import com.fantasy.Model.*;
 import com.fantasy.Request.RequestModels.LeagueResponse;
@@ -29,5 +30,7 @@ public interface IRepository extends Closeable {
     public void save(WeekScore weekScore);
     public List<WeekScore> getWeekScoresByLeagueIdAndWeek(long chosenLeagueId, int week);
     public List<WeekScore> getWeekScoresByRosterUserIdsAndWeek(List<Long> rosterUserIds, int week);
+    public RosterUser saveOrUpdate(RosterUser newRosterUser);
+    public Map<Long, String> getRosterUserIdToName();
     
 }

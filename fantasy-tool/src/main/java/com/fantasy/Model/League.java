@@ -1,9 +1,17 @@
 package com.fantasy.Model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "league")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class League {
 
     @Id
@@ -15,47 +23,6 @@ public class League {
     private String leagueName;
     @Column(name = "season")
     private int seasonYear;
-
-    public League() {}
-
-    public League(long leagueId, int numRosters, String leagueName, int seasonYear) {
-        this.leagueId = leagueId;
-        this.numRosters = numRosters;
-        this.leagueName = leagueName;
-        this.seasonYear = seasonYear;
-    }
-
-    public long getLeagueId() {
-        return leagueId;
-    }
-
-    public void setLeagueId(long leagueId) {
-        this.leagueId = leagueId;
-    }
-
-    public int getNumRosters() {
-        return numRosters;
-    }
-
-    public void setNumRosters(int numRosters) {
-        this.numRosters = numRosters;
-    }
-
-    public String getLeagueName() {
-        return this.leagueName;
-    }
-
-    public void setLeagueName(String name) {
-        this.leagueName = name;
-    }
-
-    public int getSeasonYear() {
-        return seasonYear;
-    }
-
-    public void setSeasonYear(int seasonYear) {
-        this.seasonYear = seasonYear;
-    }
 
 
     @Override

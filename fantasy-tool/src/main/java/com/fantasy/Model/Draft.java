@@ -1,9 +1,17 @@
 package com.fantasy.Model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "draft")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Draft {
     
     @Id
@@ -13,27 +21,6 @@ public class Draft {
     @Column(name = "league_id")
     private long leagueId;
 
-    public Draft() {}
-    public Draft(long draftId, long leagueId) {
-        this.draftId = draftId;
-        this.leagueId = leagueId;
-    }
-
-    public long getDraftId() {
-        return draftId;
-    }
-
-    public void setDraftId(long draftId) {
-        this.draftId = draftId;
-    }
-
-    public long getLeagueId() {
-        return leagueId;
-    }
-
-    public void setLeagueId(long leagueId) {
-        this.leagueId = leagueId;
-    }
 
     @Override
     public String toString() {

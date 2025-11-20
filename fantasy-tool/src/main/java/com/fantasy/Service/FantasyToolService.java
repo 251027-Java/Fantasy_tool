@@ -22,6 +22,7 @@ import com.fantasy.Model.*;
 import com.fantasy.Repository.*;
 import com.fantasy.Request.SleeperRequestHandler;
 import com.fantasy.Request.RequestModels.*;
+import com.fantasy.Stats.*;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -108,7 +109,8 @@ public class FantasyToolService implements Closeable {
         List<RosterUserResponse> rosterMapping = RequestFormatter.getRostersFromLeagueId(chosenLeagueId);
 
         // process roster mapping and insert to db
-        List<Long> rosterUserIds = this.formatter.processRosterUser(rosterMapping);
+        List<RosterUser> rosterUsers = this.formatter.processRosterUser(rosterMapping);
+        List<Long> rosterUserIds = rosterUsers.stream().map(RosterUser::getRosterUserId).toList();
 
         // for each week
         for (int week = 1; week < currWeek; week++) {
@@ -125,10 +127,25 @@ public class FantasyToolService implements Closeable {
             // process rosters and insert to db
             this.formatter.processMatchups(matchups, chosenLeagueId, week);
         }
-            
+
+        // query database for scores for all users
+        List<List<WeekScore>> allScores = new ArrayList<>();
+        for (int i = 1; i < currWeek; i++) {
+            allScores.add(this.repo.getWeekScoresByRosterUserIdsAndWeek(rosterUserIds, i));
+        }
+        
+        Map<Long, AllPlayData> allPlayData = Stats.computeAllPlayLuckScore(rosterUsers, allScores);
+        GlobalLogger.debug("All play data: " + allPlayData.toString());
 
 
         // compute stats from rosters information (lots of logic here)
+        LuckData luckData = Stats.computeTotalLuckScore(rosterUsers, allScores);
+        
+
+        // format data
+        Map<Long, String> rosterUserIdToName = this.repo.getRosterUserIdToName();
+        String formattedLuckData = Stats.formatLuckData(rosterUserIdToName, luckData);
+        System.out.println(formattedLuckData);
 
         // show stats, and choose to [q] quit, [c] choose a different league
         // maybe later, add option to choose a different username

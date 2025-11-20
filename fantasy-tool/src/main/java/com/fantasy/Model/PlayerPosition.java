@@ -1,23 +1,23 @@
 package com.fantasy.Model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 @Entity
 @Table(name= "player_position")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class PlayerPosition {
 
     @EmbeddedId
     private PlayerPositionId id;
 
-    public PlayerPosition() {}
-
-    public PlayerPosition(PlayerPositionId id) {
-        this.id = id;
-    }
-
-    public PlayerPositionId getId() { return id; }
-    public void setId(PlayerPositionId id) { this.id = id; }
 
     @Override
     public boolean equals(Object o ) {

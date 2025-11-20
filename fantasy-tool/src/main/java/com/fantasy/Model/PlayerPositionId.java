@@ -5,9 +5,17 @@ import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 @Embeddable
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class PlayerPositionId implements Serializable{
 
     @Column(name = "player_id") 
@@ -15,17 +23,6 @@ public class PlayerPositionId implements Serializable{
 
     @Column(name = "position")
     private String position;
-
-    public PlayerPositionId() {}
-    public PlayerPositionId(String playerId, String position) {
-        this.playerId = playerId;
-        this.position = position;
-    }
-
-    public String getPlayerId() { return playerId; }
-    public void setPlayerId(String playerId) { this.playerId = playerId; }
-    public String getPosition() { return position; }
-    public void setPosition(String position) { this.position = position; }
 
     @Override
     public String toString() {

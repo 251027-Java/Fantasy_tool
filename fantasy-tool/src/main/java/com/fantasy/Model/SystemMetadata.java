@@ -4,9 +4,17 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "system_metadata")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class SystemMetadata {
     
     @Id
@@ -16,17 +24,6 @@ public class SystemMetadata {
     @Column (name = "value")
     private String value;
 
-    public SystemMetadata() {}
-    public SystemMetadata(String key, String value) {
-        this.key = key;
-        this.value = value;
-    }
-
-    public String getKey() { return key; }
-    public String getValue() { return value; }
-
-    public void setKey(String key) { this.key = key; }
-    public void setValue(String value) { this.value = value; }
 
     @Override
     public String toString() {

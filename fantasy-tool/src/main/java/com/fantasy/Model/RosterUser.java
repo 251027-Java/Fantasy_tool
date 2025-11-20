@@ -1,69 +1,68 @@
 package com.fantasy.Model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "roster_user")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class RosterUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // auto-increment in DB
     @Column(name = "roster_user_id")
-    private long rosterUserId;
+    private Long rosterUserId;
+
     @Column(name = "roster_id")
-    private long rosterId;
+    private Integer rosterId;
+
     @Column(name = "user_id_num")
-    private long userId;
+    private Long userId;
+
     @Column(name = "league_id")
-    private long leagueId;
+    private Long leagueId;
 
-    public RosterUser() {}
+    @Column(name = "wins")
+    private Integer wins;
 
-    public RosterUser(long rosterUserId, long rosterId, long userId, long leagueId) {
-        this.rosterUserId = rosterUserId;
+    @Column(name = "ties")
+    private Integer ties;
+
+    @Column(name = "losses")
+    private Integer losses;
+
+    @Column(name = "fpts_decimal")
+    private Integer fptsDecimal;
+
+    @Column(name = "fpts_against_decimal")
+    private Integer fptsAgainstDecimal;
+
+    @Column(name = "fpts_against")
+    private Integer fptsAgainst;
+
+    @Column(name = "fpts")
+    private Integer fpts;
+
+    // constructor where everything except rosterUserId is passed in
+    public RosterUser(Integer rosterId, Long userId, Long leagueId, Integer wins, Integer ties, Integer losses, Integer fptsDecimal, Integer fptsAgainstDecimal, Integer fptsAgainst, Integer fpts) {
         this.rosterId = rosterId;
         this.userId = userId;
         this.leagueId = leagueId;
-    }
-
-    public RosterUser(long rosterId, long userId, long leagueId) {
-        this.rosterId = rosterId;
-        this.userId = userId;
-        this.leagueId = leagueId;
-    }
-
-
-
-    public long getRosterUserId() {
-        return rosterUserId;
-    }
-
-    public void setRosterUserId(long rosterUserId) {
-        this.rosterUserId = rosterUserId;
-    }
-
-    public long getRosterId() {
-        return rosterId;
-    }
-
-    public void setRosterId(long rosterId) {
-        this.rosterId = rosterId;
-    }
-
-    public long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(long userId) {
-        this.userId = userId;
-    }
-
-    public long getLeagueId() {
-        return leagueId;
-    }
-
-    public void setLeagueId(long leagueId) {
-        this.leagueId = leagueId;
+        this.wins = wins;
+        this.ties = ties;
+        this.losses = losses;
+        this.fptsDecimal = fptsDecimal;
+        this.fptsAgainstDecimal = fptsAgainstDecimal;
+        this.fptsAgainst = fptsAgainst;
+        this.fpts = fpts;
     }
 
     @Override
@@ -73,6 +72,13 @@ public class RosterUser {
                 ", rosterId=" + rosterId +
                 ", userId=" + userId +
                 ", leagueId=" + leagueId +
+                ", wins=" + wins +
+                ", ties=" + ties +
+                ", losses=" + losses +
+                ", fptsDecimal=" + fptsDecimal +
+                ", fptsAgainstDecimal=" + fptsAgainstDecimal +
+                ", fptsAgainst=" + fptsAgainst +
+                ", fpts=" + fpts +
                 '}';
     }
     

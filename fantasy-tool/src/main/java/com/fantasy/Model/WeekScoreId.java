@@ -4,35 +4,22 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Embeddable
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class WeekScoreId implements Serializable {
     @Column(name = "roster_user_id")
     private Long rosterUserId;
     @Column(name = "week_num")
     private Integer weekNum;
 
-    public WeekScoreId() {}
-    public WeekScoreId(Long rosterUserId, int weekNum) {
-        this.rosterUserId = rosterUserId;
-        this.weekNum = weekNum;
-    }
-
-    public Long getRosterUserId() {
-        return rosterUserId;
-    }
-
-    public Integer getWeekNum() {
-        return weekNum;
-    }
-
-    public void setWeekNum(Integer weekNum) {
-        this.weekNum = weekNum;
-    }
-
-    public void setRosterUserId(Long rosterUserId) {
-        this.rosterUserId = rosterUserId;
-    }
 
     @Override
     public String toString() {

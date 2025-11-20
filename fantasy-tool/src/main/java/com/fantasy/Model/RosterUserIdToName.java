@@ -1,26 +1,18 @@
 package com.fantasy.Model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
-@Table(name = "week_score")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class WeekScore {
-
-    @EmbeddedId
-    private WeekScoreId id;
-
-    @Column(name = "score")
-    private Double score;
-
+public class RosterUserIdToName {
     
-
-    
+    private long rosterUserId;
+    private String displayName;
 }

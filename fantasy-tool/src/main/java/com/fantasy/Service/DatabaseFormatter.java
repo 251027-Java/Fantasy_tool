@@ -100,24 +100,46 @@ public class DatabaseFormatter {
      * @param rosterResponses the response from sleeper
      * @return 
      */
-    public List<Long> processRosterUser(List<RosterUserResponse> rosterResponses) {
-        List<Long> rosterUserIds = new ArrayList<>();
+    public List<RosterUser> processRosterUser(List<RosterUserResponse> rosterResponses) {
+
+        // TODO: update so that it includes user information for that league, (wins etc)
+        // to do that, should also check if that league has been updated recently using
+        // metadata
+        List<RosterUser> rosterUsers = new ArrayList<>();
         for (RosterUserResponse roster : rosterResponses) {
             // check if roster user mapping already in database
             // (done by checking for user_id and league_id)
             RosterUser dbRosterUser = this.repo.getRosterUserByUserIdAndLeagueId(roster.getUserId(), roster.getLeagueId());
-            RosterUser newRosterUser;
-            if (dbRosterUser == null) {
-                // insert new roster user mapping
-                newRosterUser = new RosterUser(roster.getRosterId(), roster.getUserId(), roster.getLeagueId());
-                this.repo.save(newRosterUser);
-                GlobalLogger.debug("RosterUser added: " + newRosterUser.toString());
+            if (dbRosterUser != null) {
+                // update all fields of dbRosterUser except rosterUserId
+                dbRosterUser.setRosterId(roster.getRosterId());
+                dbRosterUser.setUserId(roster.getUserId());
+                dbRosterUser.setLeagueId(roster.getLeagueId());
+                dbRosterUser.setWins(roster.getSettings().getWins());
+                dbRosterUser.setTies(roster.getSettings().getTies());
+                dbRosterUser.setLosses(roster.getSettings().getLosses());
+                dbRosterUser.setFptsDecimal(roster.getSettings().getFptsDecimal());
+                dbRosterUser.setFptsAgainstDecimal(roster.getSettings().getFptsAgainstDecimal());
+                dbRosterUser.setFptsAgainst(roster.getSettings().getFptsAgainst());
+                dbRosterUser.setFpts(roster.getSettings().getFpts());
+                
             } else {
-                newRosterUser = dbRosterUser;
+                dbRosterUser = new RosterUser(
+                    roster.getRosterId(),
+                    roster.getUserId(),
+                    roster.getLeagueId(),
+                    roster.getSettings().getWins(),
+                    roster.getSettings().getTies(),
+                    roster.getSettings().getLosses(),
+                    roster.getSettings().getFptsDecimal(),
+                    roster.getSettings().getFptsAgainstDecimal(),
+                    roster.getSettings().getFptsAgainst(),
+                    roster.getSettings().getFpts()
+                );
             }
-            rosterUserIds.add(newRosterUser.getRosterUserId());
+            rosterUsers.add(repo.saveOrUpdate(dbRosterUser));
         }
-        return rosterUserIds;
+        return rosterUsers;
     }
         
 

@@ -6,9 +6,17 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -18,30 +26,7 @@ public class User {
     @Column(name = "display_name")
     private String displayName;
 
-    public User() {}    
-
     // TODO: update this to have team name
-
-    public User(long userId, String displayName) {
-        this.userId = userId;
-        this.displayName = displayName;
-    }
-
-    public long getUserId() {
-        return userId;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setUserId(long userId) {
-        this.userId = userId;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
 
     @Override
     public String toString() {
