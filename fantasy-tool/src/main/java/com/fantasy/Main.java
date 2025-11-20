@@ -1,6 +1,7 @@
 package com.fantasy;
 
 import java.io.IOException;
+import java.util.Scanner;
 
 import com.Logger.GlobalLogger;
 import com.fantasy.Repository.*;
@@ -17,7 +18,8 @@ public class Main {
         GlobalLogger.info("Starting application");
 
         IRepository repo = new JpaRepository();
-        try (FantasyToolService service = new FantasyToolService(repo)) {
+        Scanner scan = new Scanner(System.in);
+        try (FantasyToolService service = new FantasyToolService(repo, scan)) {
 
             service.start();
         } catch (IOException e) {

@@ -33,9 +33,9 @@ public class FantasyToolService implements Closeable {
     private static final ObjectMapper om = new ObjectMapper();
     private DatabaseFormatter formatter;
 
-    public FantasyToolService(IRepository repo) {
+    public FantasyToolService(IRepository repo, Scanner scan) {
         this.repo = repo;
-        this.scan = new Scanner(System.in);
+        this.scan = scan;
         this.formatter = new DatabaseFormatter(repo);
     }
 
@@ -53,6 +53,7 @@ public class FantasyToolService implements Closeable {
         
         // get userId
         long userId = this.getUserId();
+        System.out.println("Getting leagues...");
         GlobalLogger.debug("UserId: " + userId);
         // clearScreen();
         // get leagues based on userId (assumes the current year)
@@ -68,6 +69,7 @@ public class FantasyToolService implements Closeable {
             // ask user to choose a league from options
             clearScreen();
             long chosenLeagueId = this.chooseLeague(dbLeagues);
+            System.out.println("Getting stats...");
             League chosenLeague = this.repo.getLeagueById(chosenLeagueId);
             GlobalLogger.debug("League chosen: " + chosenLeague.getLeagueName());
             
@@ -163,7 +165,7 @@ public class FantasyToolService implements Closeable {
         // get league info
     }
 
-    private boolean ifQuit() {
+    public boolean ifQuit() {
         do {
             System.out.println("Press [q] to quit, [c] to choose a different league");
             String input = this.scan.nextLine().strip().toLowerCase();
@@ -182,7 +184,7 @@ public class FantasyToolService implements Closeable {
      * Get userId from sleeper based on input username from user
      * @return userId of user
      */
-    private long getUserId(){
+    public long getUserId(){
         // prompt user for username until valid httpresponse is returned
         do {
             System.out.println("Please enter your Sleeper username");
