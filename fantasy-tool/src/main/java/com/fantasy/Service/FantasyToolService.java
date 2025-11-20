@@ -172,7 +172,7 @@ public class FantasyToolService implements Closeable {
             } else if (input.equals("c")) {
                 return false;
             } else {
-                System.out.println("Invalid input");
+                System.out.println("Invalid input\n");
             }
         } while (true);
     }
@@ -200,7 +200,7 @@ public class FantasyToolService implements Closeable {
                 }
             } catch (Exception e) {
                 GlobalLogger.debug("Could not find user", e);
-                System.out.println("Invalid username");
+                System.out.println("Invalid username\n");
             }
         } while (true);
     }
@@ -215,7 +215,7 @@ public class FantasyToolService implements Closeable {
         // prompt user to choose a league
 
         do {
-            System.out.println("Please choose a league");
+            System.out.println("Please choose a league to get stats for");
             for (int i = 0; i < leagues.size(); i++) {
                 System.out.printf("[%d] %s\n\n", i+1, leagues.get(i).getLeagueName());
             }
@@ -226,8 +226,8 @@ public class FantasyToolService implements Closeable {
                     return leagues.get(choice-1).getLeagueId();
                 }
             } catch (NumberFormatException e) {
-                System.out.println("Invalid input");
             }
+            System.out.println("Invalid input\n");
         } while (true);
         // return the id of the chosen league
     }

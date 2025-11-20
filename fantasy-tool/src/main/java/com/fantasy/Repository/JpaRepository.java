@@ -47,8 +47,10 @@ public class JpaRepository implements IRepository {
 
         try {
             tx.begin();
-
-            RosterUser dbRosterUser = em.find(RosterUser.class, rosterUser.getRosterUserId());
+            RosterUser dbRosterUser = null;
+            if (rosterUser.getRosterUserId() != null) {
+                dbRosterUser = em.find(RosterUser.class, rosterUser.getRosterUserId());
+            }
             if (dbRosterUser == null) {
                 em.persist(rosterUser);
                 dbRosterUser = rosterUser;

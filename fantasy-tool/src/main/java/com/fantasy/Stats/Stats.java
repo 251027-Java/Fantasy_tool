@@ -193,20 +193,31 @@ public class Stats {
 
         Map<Long, List<Double>> weekly = luckData.getMedianLuck().getMedianLuckScoresByWeek();
 
-        // Determine number of weeks (max list size)
         int numWeeks = weekly.values().stream()
                 .mapToInt(List::size)
                 .max()
                 .orElse(0);
 
+        // ============================
+        // WEEKLY MEDIAN LUCK SCORES
+        // ============================
         sb.append("===== WEEKLY MEDIAN LUCK SCORES =====\n");
 
-        // Header
+        // Build separator row
+        StringBuilder separator = new StringBuilder();
+        separator.append("---------------------"); // user column
+        for (int w = 0; w < numWeeks; w++) {
+            separator.append("+-----------");
+        }
+        separator.append("\n");
+
+        // Header row
         sb.append(String.format("%-20s", "User"));
         for (int w = 1; w <= numWeeks; w++) {
-            sb.append(String.format(" | Week%-6d", w));
+            sb.append(String.format(" | Week%-5d", w));
         }
         sb.append("\n");
+        sb.append(separator);
 
         // Rows
         for (Long userId : weekly.keySet()) {
@@ -218,62 +229,75 @@ public class Stats {
             for (int i = 0; i < numWeeks; i++) {
                 Double val = (i < weeks.size()) ? weeks.get(i) : null;
                 if (val == null) {
-                    sb.append(" |     -    ");
+                    sb.append(" |     --- ");
                 } else {
-                    sb.append(String.format(" | %10.3f", val));
+                    sb.append(String.format(" | %9.3f", val));
                 }
             }
             sb.append("\n");
+            sb.append(separator);  // <--- ADDED separation line
         }
+
 
         sb.append("\n\n===== COMPOSITE LUCK SCORES =====\n");
 
-        // Header row
+        // ============================
+        // COMPOSITE TABLE FORMATTING
+        // ============================
+
+        String compSeparator =
+                "----------------------+------------+--------------+--------------+---------+----------+--------+--------+----------+--------\n";
+
+        sb.append(compSeparator);
         sb.append(String.format(
-                "%-20s | %-10s | %-12s | %-12s | %-7s | %-8s | %-6s | %-6s | %-8s | %-6s\n",
+                "%-22s| %-10s | %-12s | %-12s | %-7s | %-8s | %-6s | %-6s | %-8s | %-6s\n",
                 "User", "TotalLuck", "MedianLuck", "AllPlayLuck",
                 "AP_Win", "AP_Loss", "AP_Tie", "Wins", "Losses", "Ties"
         ));
+        sb.append(compSeparator);
 
-
-        // sort by total luck score (total median luck + all play luck)
+        // Sort users by total luck
         var userData = luckData.getMedianLuck().getTotalMedianLuckScores().entrySet()
                 .stream()
-                .sorted(Map.Entry.comparingByKey( (userId1, userId2) -> {          
-                    AllPlayData allPlayData1 = luckData.getAllPlayLuck().get(userId1);
-                    double medianLuckScore1 = luckData.getMedianLuck().getTotalMedianLuckScores().get(userId1); 
-                    double totalLuckScore1 = medianLuckScore1 + allPlayData1.getAllPlayLuckScore();
+                .sorted((a, b) -> {
+                    Long u1 = a.getKey();
+                    Long u2 = b.getKey();
 
-                    AllPlayData allPlayData2 = luckData.getAllPlayLuck().get(userId2);
-                    double medianLuckScore2 = luckData.getMedianLuck().getTotalMedianLuckScores().get(userId2); 
-                    double totalLuckScore2 = medianLuckScore2 + allPlayData2.getAllPlayLuckScore();
+                    double t1 = a.getValue() + luckData.getAllPlayLuck().get(u1).getAllPlayLuckScore();
+                    double t2 = b.getValue() + luckData.getAllPlayLuck().get(u2).getAllPlayLuckScore();
 
-                    return Double.compare(totalLuckScore1, totalLuckScore2);
-                }))
+                    return Double.compare(t1, t2);
+                })
                 .toList();
-                
-        // Rows
-        for ( Map.Entry<Long, Double> entry : userData) {
-                Long userId = entry.getKey();
-                Double totalMedianLuck = entry.getValue();
-            AllPlayData allPlayData = luckData.getAllPlayLuck().get(userId);
-            double totalLuckScore = totalMedianLuck + allPlayData.getAllPlayLuckScore();
+
+        for (Map.Entry<Long, Double> entry : userData) {
+
+            Long userId = entry.getKey();
+            double totalMedianLuck = entry.getValue();
+
+            AllPlayData ap = luckData.getAllPlayLuck().get(userId);
+            double totalLuckScore = totalMedianLuck + ap.getAllPlayLuckScore();
+
             sb.append(String.format(
-                    "%-20s | %10.3f | %12.3f | %12.3f | %7d | %8d | %6d | %6d | %8d | %6d\n",
+                    "%-22s| %10.3f | %12.3f | %12.3f | %7d | %8d | %6d | %6d | %8d | %6d\n",
                     rosterUserIdToName.getOrDefault(userId, "Unknown User"),
                     totalLuckScore,
                     totalMedianLuck,
-                    allPlayData.getAllPlayLuckScore(),
-                    allPlayData.getAllPlayWins(),
-                    allPlayData.getAllPlayLosses(),
-                    allPlayData.getAllPlayTies(),
-                    allPlayData.getActualWins(),
-                    allPlayData.getActualLosses(),
-                    allPlayData.getActualTies()
+                    ap.getAllPlayLuckScore(),
+                    ap.getAllPlayWins(),
+                    ap.getAllPlayLosses(),
+                    ap.getAllPlayTies(),
+                    ap.getActualWins(),
+                    ap.getActualLosses(),
+                    ap.getActualTies()
             ));
+            sb.append(compSeparator);
         }
+
+
 
         return sb.toString();
     }
+
 
 }
