@@ -1,5 +1,6 @@
 package com.fantasy.Stats;
 
+import java.security.KeyStore.Entry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,8 +15,12 @@ import com.fantasy.Repository.JPAUtil;
 
 import jakarta.persistence.EntityManager;
 
+//TODO: better formatting so column names have bars under them
+
+// TODO: order luck stat by total luck
+
+
 public class Stats {
-    //TODO: add computation of median luck score and all play percentage data
     // potentially through helper classes. 
     private static final double MEDIAN_SCALE_FACTOR = 10; 
 
@@ -26,13 +31,18 @@ public class Stats {
         boolean withinCutoff = Math.abs(medianOffset) <= luckCutoff;
 
         double innerValue;
+        // TODO: fix so that smallest amount that matters is a single pass yard (.04)
         if (!withinCutoff) {
             innerValue = 0;
         } else {
             if (medianOffset < 0) {
                 innerValue = -1 / Math.sqrt(-1 * medianOffset);
-            } else {
+            } else if (medianOffset > 0) {
                 innerValue = 1 / Math.sqrt(medianOffset);
+            } else { // ties with median (exceedingly rare)
+                // counts as a loss so act as if it's 1 / sqrt(.04)
+                // (the smallest amount it's possible to lose by that isnt a tie)
+                innerValue = -1 / Math.sqrt(.02);
             }
         }
 
@@ -194,7 +204,7 @@ public class Stats {
         // Header
         sb.append(String.format("%-20s", "User"));
         for (int w = 1; w <= numWeeks; w++) {
-            sb.append(String.format(" | Week%-4d", w));
+            sb.append(String.format(" | Week%-6d", w));
         }
         sb.append("\n");
 
@@ -225,10 +235,28 @@ public class Stats {
                 "AP_Win", "AP_Loss", "AP_Tie", "Wins", "Losses", "Ties"
         ));
 
+
+        // sort by total luck score (total median luck + all play luck)
+        var userData = luckData.getMedianLuck().getTotalMedianLuckScores().entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey( (userId1, userId2) -> {          
+                    AllPlayData allPlayData1 = luckData.getAllPlayLuck().get(userId1);
+                    double medianLuckScore1 = luckData.getMedianLuck().getTotalMedianLuckScores().get(userId1); 
+                    double totalLuckScore1 = medianLuckScore1 + allPlayData1.getAllPlayLuckScore();
+
+                    AllPlayData allPlayData2 = luckData.getAllPlayLuck().get(userId2);
+                    double medianLuckScore2 = luckData.getMedianLuck().getTotalMedianLuckScores().get(userId2); 
+                    double totalLuckScore2 = medianLuckScore2 + allPlayData2.getAllPlayLuckScore();
+
+                    return Double.compare(totalLuckScore1, totalLuckScore2);
+                }))
+                .toList();
+                
         // Rows
-        for (Long userId : rosterUserIdToName.keySet()) {
+        for ( Map.Entry<Long, Double> entry : userData) {
+                Long userId = entry.getKey();
+                Double totalMedianLuck = entry.getValue();
             AllPlayData allPlayData = luckData.getAllPlayLuck().get(userId);
-            var totalMedianLuck = luckData.getMedianLuck().getTotalMedianLuckScores().get(userId);
             double totalLuckScore = totalMedianLuck + allPlayData.getAllPlayLuckScore();
             sb.append(String.format(
                     "%-20s | %10.3f | %12.3f | %12.3f | %7d | %8d | %6d | %6d | %8d | %6d\n",

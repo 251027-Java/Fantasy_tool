@@ -64,90 +64,96 @@ public class FantasyToolService implements Closeable {
         // query database for leagues with league ids
         List<League> dbLeagues = this.repo.getLeaguesById(leagueIds);
         GlobalLogger.debug("Leagues gotten from database: "+ dbLeagues.toString());
+        while (true) {
+            // ask user to choose a league from options
+            clearScreen();
+            long chosenLeagueId = this.chooseLeague(dbLeagues);
+            League chosenLeague = this.repo.getLeagueById(chosenLeagueId);
+            GlobalLogger.debug("League chosen: " + chosenLeague.getLeagueName());
+            
 
-        // ask user to choose a league from options
-        clearScreen();
-        long chosenLeagueId = this.chooseLeague(dbLeagues);
-        League chosenLeague = this.repo.getLeagueById(chosenLeagueId);
-        GlobalLogger.debug("League chosen: " + chosenLeague.getLeagueName());
-        
+            // add users from chosen league into database (if not there already)
+            List<UserResponse> users = RequestFormatter.getUsersFromLeague(chosenLeagueId);
 
-        // add users from chosen league into database (if not there already)
-        List<UserResponse> users = RequestFormatter.getUsersFromLeague(chosenLeagueId);
-
-        // process users into db format
-        this.formatter.processUsers(users);
-
-
-        // check if players have been updated recently
-        try {
-            Boolean updatedRecently = this.playersUpdatedRecently();
-            if (!updatedRecently) {
-                // get players from sleeper
-                System.out.println("Players have not been updated recently, updating...");
-                List<PlayerResponse> players = RequestFormatter.getPlayers();
+            // process users into db format
+            this.formatter.processUsers(users);
 
 
-                // process players into db format and insert
-                this.formatter.processPlayers(players);
-                
+            // check if players have been updated recently
+            try {
+                Boolean updatedRecently = this.playersUpdatedRecently();
+                if (!updatedRecently) {
+                    // get players from sleeper
+                    System.out.println("Players have not been updated recently, updating...");
+                    List<PlayerResponse> players = RequestFormatter.getPlayers();
 
-                // update players last updated
-                this.updateLastPlayerUpdate();
-                System.out.println("Players info updated");
-                GlobalLogger.debug("Players info updated");
-            }
-        } catch (DateTimeParseException e) {
-            GlobalLogger.error(String.format("Could not parse last player update, date: %s", e.getParsedString()), e);
-            // critical error
-            System.out.println("Critical error: could not retrieve players' information");
-            System.exit(1);
 
-        }
+                    // process players into db format and insert
+                    this.formatter.processPlayers(players);
+                    
 
-        // get roster mapping to user from sleeper
-        List<RosterUserResponse> rosterMapping = RequestFormatter.getRostersFromLeagueId(chosenLeagueId);
+                    // update players last updated
+                    this.updateLastPlayerUpdate();
+                    System.out.println("Players info updated");
+                    GlobalLogger.debug("Players info updated");
+                }
+            } catch (DateTimeParseException e) {
+                GlobalLogger.error(String.format("Could not parse last player update, date: %s", e.getParsedString()), e);
+                // critical error
+                System.out.println("Critical error: could not retrieve players' information");
+                System.exit(1);
 
-        // process roster mapping and insert to db
-        List<RosterUser> rosterUsers = this.formatter.processRosterUser(rosterMapping);
-        List<Long> rosterUserIds = rosterUsers.stream().map(RosterUser::getRosterUserId).toList();
-
-        // for each week
-        for (int week = 1; week < currWeek; week++) {
-            // check if week scores for this league is already in database
-            // assumes that if a single user's week score is in the database, 
-            // all users' week scores are
-            if (this.repo.getWeekScoresByRosterUserIdsAndWeek(rosterUserIds, week).size() > 0) {
-                continue;
             }
 
-            // get rosters from sleeper 
-            List<MatchupResponse> matchups = RequestFormatter.getMatchupsFromLeagueIdAndWeek(chosenLeagueId, week);
+            // get roster mapping to user from sleeper
+            List<RosterUserResponse> rosterMapping = RequestFormatter.getRostersFromLeagueId(chosenLeagueId);
 
-            // process rosters and insert to db
-            this.formatter.processMatchups(matchups, chosenLeagueId, week);
+            // process roster mapping and insert to db
+            List<RosterUser> rosterUsers = this.formatter.processRosterUser(rosterMapping);
+            List<Long> rosterUserIds = rosterUsers.stream().map(RosterUser::getRosterUserId).toList();
+
+            // for each week
+            for (int week = 1; week < currWeek; week++) {
+                // check if week scores for this league is already in database
+                // assumes that if a single user's week score is in the database, 
+                // all users' week scores are
+                if (this.repo.getWeekScoresByRosterUserIdsAndWeek(rosterUserIds, week).size() > 0) {
+                    continue;
+                }
+
+                // get rosters from sleeper 
+                List<MatchupResponse> matchups = RequestFormatter.getMatchupsFromLeagueIdAndWeek(chosenLeagueId, week);
+
+                // process rosters and insert to db
+                this.formatter.processMatchups(matchups, chosenLeagueId, week);
+            }
+
+            // query database for scores for all users
+            List<List<WeekScore>> allScores = new ArrayList<>();
+            for (int i = 1; i < currWeek; i++) {
+                allScores.add(this.repo.getWeekScoresByRosterUserIdsAndWeek(rosterUserIds, i));
+            }
+            
+            Map<Long, AllPlayData> allPlayData = Stats.computeAllPlayLuckScore(rosterUsers, allScores);
+            GlobalLogger.debug("All play data: " + allPlayData.toString());
+
+
+            // compute stats from rosters information (lots of logic here)
+            LuckData luckData = Stats.computeTotalLuckScore(rosterUsers, allScores);
+            
+
+            // format data
+            Map<Long, String> rosterUserIdToName = this.repo.getRosterUserIdToName();
+            String formattedLuckData = Stats.formatLuckData(rosterUserIdToName, luckData);
+            clearScreen();
+            System.out.println(formattedLuckData);
+
+            // prompt user to choose to [q] quit, [c] choose a different league
+            boolean ifQuit = this.ifQuit();
+            if (ifQuit) {
+                break;
+            }
         }
-
-        // query database for scores for all users
-        List<List<WeekScore>> allScores = new ArrayList<>();
-        for (int i = 1; i < currWeek; i++) {
-            allScores.add(this.repo.getWeekScoresByRosterUserIdsAndWeek(rosterUserIds, i));
-        }
-        
-        Map<Long, AllPlayData> allPlayData = Stats.computeAllPlayLuckScore(rosterUsers, allScores);
-        GlobalLogger.debug("All play data: " + allPlayData.toString());
-
-
-        // compute stats from rosters information (lots of logic here)
-        LuckData luckData = Stats.computeTotalLuckScore(rosterUsers, allScores);
-        
-
-        // format data
-        Map<Long, String> rosterUserIdToName = this.repo.getRosterUserIdToName();
-        String formattedLuckData = Stats.formatLuckData(rosterUserIdToName, luckData);
-        System.out.println(formattedLuckData);
-
-        // show stats, and choose to [q] quit, [c] choose a different league
         // maybe later, add option to choose a different username
 
 
@@ -155,6 +161,20 @@ public class FantasyToolService implements Closeable {
         
 
         // get league info
+    }
+
+    private boolean ifQuit() {
+        do {
+            System.out.println("Press [q] to quit, [c] to choose a different league");
+            String input = this.scan.nextLine().strip().toLowerCase();
+            if (input.equals("q")) {
+                return true;
+            } else if (input.equals("c")) {
+                return false;
+            } else {
+                System.out.println("Invalid input");
+            }
+        } while (true);
     }
 
     
